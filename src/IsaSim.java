@@ -11,29 +11,36 @@ import java.io.*;
 public class IsaSim {
 
 	static int pc;
-	static int reg[] = new int[4];
+	static int reg[] = new int[32];
 
 	// Here the first program hard coded as an array
-	static int progr[] = {
-			// As minimal RISC-V assembler example
-			0x00200093, // addi x1 x0 2
-			0x00300113, // addi x2 x0 3
-			0x002081b3, // add x3 x1 x2
-	};
+	static int mem[] = new int[1000000];
 
 	public static void main(String[] args) {
-
+		int prog[] = readByteFile(args[0]);
 		System.out.println("Hello RISC-V World!");
 
 		pc = 0;
 
 		for (;;) {
 
-			int instr = progr[pc];
+			int instr = prog[pc];
 			int opcode = instr & 0x7f;
-			int rd = (instr >> 7) & 0x01f;
-			int rs1 = (instr >> 15) & 0x01f;
-			int imm = (instr >> 20);
+//			int rd = (instr >> 7) & 0x01f;
+//			int rs1 = (instr >> 15) & 0x01f;
+//			int imm = (instr >> 20);
+			
+			if (opcode == 0b0000011 || opcode ==  0b0001111 || opcode ==  0b0010011 || opcode ==  0b0011011 || opcode ==  0b1110011 || opcode ==  0b110111) {
+				// I-TYPE
+			}
+			else if (opcode == 0b0000011 || opcode ==  0b0001111 || opcode ==  0b0010011 || opcode ==  0b0011011 || opcode ==  0b1110011 || opcode ==  0b110111) {
+				
+			}
+			else {
+				System.out.println("Opcode " + opcode + " not yet implemented");
+				break;
+			}
+
 
 			switch (opcode) {
 
