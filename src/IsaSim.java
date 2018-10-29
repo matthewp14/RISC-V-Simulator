@@ -70,10 +70,12 @@ public class IsaSim {
 			long fileSize = new File(inFile).length();
 			byte[] fileBytes = new byte[ (int) fileSize];
 			
-			inputStream.read(fileBytes);
+			inputStream.read(fileBytes); // Read the byte file into the byte array
 			
 			
-			int[] instArr = new int[ (int) (fileSize/4)];
+			int[] instArr = new int[ (int) (fileSize/4)]; // integer array of instructions
+			
+			//loop through byte array and construct 32bit instructions
 			for (int i = 0 ; i < fileSize; i+=4) {
 				int instr = fileBytes[i];
 				instr = instr << 8;
@@ -82,14 +84,15 @@ public class IsaSim {
 				instr = instr + fileBytes[i+2];
 				instr = instr << 8;
 				instr = instr + fileBytes[i+3];
-				instArr[i/4] = instr;
-				
+				instArr[i/4] = instr;				
 			}
 			return instArr;
 		}
 		catch(IOException ex) {
 			ex.printStackTrace();
+			return null;
 		}
+		
 	}
 	
 
