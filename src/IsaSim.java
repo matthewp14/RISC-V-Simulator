@@ -7,6 +7,7 @@
  * @author Martin Schoeberl (martin@jopdesign.com)
  *
  */
+import java.io.*;
 public class IsaSim {
 
 	static int pc;
@@ -57,5 +58,39 @@ public class IsaSim {
 		System.out.println("Program exit");
 
 	}
+	
+	
+	
+	
+	
+	public static int[] readByteFile(String inFile) {
+		try (
+			InputStream inputStream = new FileInputStream(inFile);
+		) {
+			long fileSize = new File(inFile).length();
+			byte[] fileBytes = new byte[ (int) fileSize];
+			
+			inputStream.read(fileBytes);
+			
+			
+			int[] instArr = new int[ (int) (fileSize/4)];
+			for (int i = 0 ; i < fileSize; i+=4) {
+				int instr = fileBytes[i];
+				instr = instr << 8;
+				instr = instr + fileBytes[i+1];
+				instr = instr << 8;
+				instr = instr + fileBytes[i+2];
+				instr = instr << 8;
+				instr = instr + fileBytes[i+3];
+				instArr[i/4] = instr;
+				
+			}
+			return instArr;
+		}
+		catch(IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+	
 
 }
