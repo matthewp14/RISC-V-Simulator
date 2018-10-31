@@ -45,6 +45,7 @@ public class IsaSim {
 				rd = (instr >> 7) & 0b11111;
 				imm = ((instr >> 12) << 12);
 				// Add functionality
+				reg[rd] = imm;
 				System.out.println("Add U-Type Functionality");
 				break;
 			}
