@@ -1,6 +1,6 @@
-package testingHarness;
+package src.testingHarness;
 
-import simulator.IsaSim;
+import src.simulator.IsaSim;
 
 public class Tester {
 

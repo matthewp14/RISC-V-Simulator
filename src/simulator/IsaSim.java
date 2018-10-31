@@ -1,4 +1,4 @@
-package simulator;
+package src.simulator;
 /**
  * RISC-V Instruction Set Simulator
  * 
@@ -10,6 +10,7 @@ package simulator;
  */
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.util.*;
 public class IsaSim {
 
 	static int pc;
