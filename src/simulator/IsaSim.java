@@ -44,9 +44,7 @@ public class IsaSim {
 			case 0b0110111: {
 				rd = (instr >> 7) & 0b11111;
 				imm = ((instr >> 12) << 12);
-				// Add functionality
 				reg[rd] = imm;
-				System.out.println("Add U-Type Functionality");
 				break;
 			}
 			
@@ -77,7 +75,7 @@ public class IsaSim {
 				rs2 = (instr >> 20) & 0b11111;
 				imm = (((instr >> 8) & 0b1111) << 1) + (((instr >> 25) & 0b111111) << 5) + (((instr >> 7) & 0b1) << 11) + (((instr >> 31) & 0b1) << 12); 
 				// Add functionality
-				System.out.println("Add J-Type Functionality");
+				System.out.println("Add B-Type Functionality");
 				break;
 			}
 			
@@ -113,8 +111,15 @@ public class IsaSim {
 				if (funct3 == 0b001 || funct3 == 0b101) {
 					shamt = (instr >> 20) & 0b11111;
 					funct7 = (instr >> 25);
-					// Add functionality
-					System.out.println("Add Shift I-Type Functionality");
+					if (funct3 == 0b001) { //SLLI
+						reg[rd] = reg[rs1] << shamt;
+					}
+					else if (funct3 == 0b101 && funct7 == 0){ //SRLI
+						reg[rd] = reg[rs1] >>> shamt;
+					}
+					else { //SRAI
+						reg[rd] = reg[rs1] >> shamt;
+					}
 				}
 				
 				// Normal I-Type
