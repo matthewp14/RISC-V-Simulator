@@ -16,7 +16,7 @@ public class IsaSim {
 	static int pc;
 	static int reg[] = new int[32];
 
-	// Here the first program hard coded as an array
+	// 4MB storage
 	static int mem[] = new int[1000000];
 
 	public static void main(String[] args) {
@@ -167,6 +167,7 @@ public class IsaSim {
 						} else { //SRAI
 							reg[rd] = reg[rs1] >> shamt;
 						}
+						break;
 					}
 					}
 		
@@ -178,6 +179,28 @@ public class IsaSim {
 					switch (funct3) {
 					case 0b000: {
 						reg[rd] = reg[rs1] + imm;
+						break;
+					}
+					case 0b010: { // SLTI
+						if (reg[rs1]< imm) reg[rd] = 1;
+						 else reg[rd] = 0;
+						break;
+					}
+					case 0b011: { // SLTIU
+						if (Integer.compareUnsigned(reg[rs1], imm) < 0) reg[rd] = 1;
+						else reg[rd] = 0;
+						break;
+					}
+					case 0b100: { //XORI
+						reg[rd] = reg[rs1] ^ imm;
+						break;
+					}
+					case 0b110: { //ORI
+						reg[rd] = reg[rs1] | imm;
+						break;
+					}
+					case 0b111: { //ANDI
+						reg[rd] = reg[rs1] & imm;
 						break;
 					}
 					default: {
@@ -206,6 +229,40 @@ public class IsaSim {
 					else {
 						reg[rd] = reg[rs1] - reg[rs2];
 					}
+					break;
+				} 
+				case 0b001: { //SLL
+					shamt = (reg[rs2] & 0b11111);
+					reg[rd] = reg[rs1] << shamt;
+				}
+				case 0b010: { //SLT
+					if (reg[rs1] < reg[rs2]) reg[rd] = 1;
+					else reg[rd] = 0;
+					break;
+				}
+				case 0b011: { //SLTU
+					if (Integer.compareUnsigned(reg[rs1], reg[rs2]) < 0) reg[rd] = 1;
+					else reg[rd] = 0;
+					break;
+				}
+				case 0b100: { //XOR
+					reg[rd] = reg[rs1] ^ reg[rs2];
+					break;
+				}
+				case 0b101: { 
+					shamt = (reg[rs2] & 0b11111);
+					if (funct7 == 0) { //SRL
+						reg[rd] = reg[rs1] >>> shamt;
+					} else { //SRA
+						reg[rd] = reg[rs1] >> shamt;
+					} break;
+				}
+				case 0b110: { //OR
+					reg[rd] = reg[rs1] | reg[rs2];
+					break;
+				}
+				case 0b111: { //AND
+					reg[rd] = reg[rs1] & reg[rs2];
 					break;
 				}
 				default: {
