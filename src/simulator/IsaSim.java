@@ -235,7 +235,7 @@ public class IsaSim {
 			
 			
 			if (!branch)++pc; // We count in 4 byte words
-			else {
+			else { // if branching increment by specified amount
 				pc += imm/4;
 				branch = !branch;
 			}
