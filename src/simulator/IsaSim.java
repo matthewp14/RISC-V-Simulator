@@ -48,6 +48,12 @@ public class IsaSim {
 				reg[rd] = imm;
 				break;
 			}
+			// U-Type AUIPC
+			case 0b0010111: {
+				rd = (instr >> 7) & 0b11111;
+				imm = ((instr >> 12) << 12);
+				System.out.println("Add AUIPC Functionality");
+			}
 			
 			// J-Type
 			case 0b1101111: {
