@@ -34,6 +34,7 @@ public class IsaSim {
 		int funct3 = Integer.MIN_VALUE;
 		int funct7 = Integer.MIN_VALUE;
 		int shamt = Integer.MIN_VALUE;
+		boolean branch = false;
 		loop: while(true) {		
 			// Little to Big Endian
 			instr = Integer.reverseBytes(prog[pc]);
@@ -51,7 +52,7 @@ public class IsaSim {
 			// J-Type
 			case 0b1101111: {
 				rd = (instr >> 7) & 0b11111;
-				imm = (((instr >> 21) & 0b11111111111) << 1) + (((instr >> 20) & 0b1) << 11) + (((instr >> 12) & 0b11111111) << 12) + (((instr >> 31) & 0b1) << 20); 
+				imm = (((instr >> 21) & 0b11111111111)) + (((instr >> 20) & 0b1) << 11) + (((instr >> 12) & 0b11111111) << 12) + (((instr >> 31) & 0b1) << 20); 
 				// Add functionality
 				System.out.println("Add J-Type Functionality");
 				break;
@@ -73,9 +74,32 @@ public class IsaSim {
 				funct3 = (instr >> 12) & 0b111;
 				rs1 = (instr >> 15) & 0b11111;
 				rs2 = (instr >> 20) & 0b11111;
-				imm = (((instr >> 8) & 0b1111) << 1) + (((instr >> 25) & 0b111111) << 5) + (((instr >> 7) & 0b1) << 11) + (((instr >> 31) & 0b1) << 12); 
+				imm = (((instr >> 8) & 0b1111) << 1) + (((instr >> 25) & 0b111111) << 5) + (((instr >> 7) & 0b1) << 11) + (((instr >> 31) & -1) << 12); 
 				// Add functionality
-				System.out.println("Add B-Type Functionality");
+				if (funct3 == 0b000) { // BEQ
+					if (reg[rs1]==reg[rs2]) {
+						branch = true; 
+						break;
+					}
+				} else if(funct3 == 0b001) { //BNE
+					if (reg[rs1]!=reg[rs2]) {
+						branch = true;
+						break;
+					}
+				} else if(funct3 == 0b100) { // BLT
+					if (reg[rs1] < reg[rs2]) {
+						branch = true;
+						break;
+					}
+				} else if(funct3 == 0b101) { //BGE
+					if (reg[rs1] >= reg[rs2]) {
+						branch = true;
+						break;
+					}
+				} else {
+					System.out.println("Add unsigned comparison");
+				}
+				System.out.println("Add B-Type Functionality: Unsigned");
 				break;
 			}
 			
@@ -113,12 +137,15 @@ public class IsaSim {
 					funct7 = (instr >> 25);
 					if (funct3 == 0b001) { //SLLI
 						reg[rd] = reg[rs1] << shamt;
+						break;
 					}
 					else if (funct3 == 0b101 && funct7 == 0){ //SRLI
 						reg[rd] = reg[rs1] >>> shamt;
+						break;
 					}
 					else { //SRAI
 						reg[rd] = reg[rs1] >> shamt;
+						break;
 					}
 				}
 				
@@ -205,8 +232,13 @@ public class IsaSim {
 				break;
 			}
 			}
-
-			++pc; // We count in 4 byte words
+			
+			
+			if (!branch)++pc; // We count in 4 byte words
+			else {
+				pc += imm/4;
+				branch = !branch;
+			}
 			if (pc >= prog.length) {
 				break loop;
 			}

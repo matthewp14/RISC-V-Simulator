@@ -6,8 +6,8 @@ public class Tester {
 
 	//Probably looks like commented version on mac/linux 
 	//static String testPath = "../../tests/instructor/";
-	static String testPath = "tests/instructor/task1/";
-	static String testName = "shift.bin";
+	static String testPath = "tests/instructor/task2/";
+	static String testName = "branchcnt.bin";
 	public static void main(String[] args) {
 		String[] arguments = new String[]{testPath + testName};
 		IsaSim.main(arguments);
