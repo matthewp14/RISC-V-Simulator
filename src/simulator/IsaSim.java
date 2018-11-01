@@ -102,7 +102,7 @@ public class IsaSim {
 					}
 				}
 				case 0b110: { // BLTU
-					if (Integer.compareUnsigned(reg[rs1], reg[rs2]) < 0 ) {
+					if (Integer.compareUnsigned(reg[rs1], reg[rs2]) < 0 ) { // use Integer object to allow for unsigned comparison 
 						branch = true;
 						break;
 					}
