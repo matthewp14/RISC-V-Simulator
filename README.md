@@ -6,5 +6,5 @@ The RISC-V simulator accepts a binary file of compiled RISC-V32I assembly code.
 The simulator will read the binary file into an int array and subsequently loop through until 
 all instructions have been handled. The following RISC-V instructions are supported:
 
-![alt text](https://raw.githubusercontent.com/matthewp14/RISC-V-Simulator/Data/risc32i.png)
+![alt text](Data/risc32i.png)
 
