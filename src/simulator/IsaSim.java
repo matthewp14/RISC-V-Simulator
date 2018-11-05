@@ -136,7 +136,70 @@ public class IsaSim {
 				funct3 = (instr >> 12) & 0b111;
 				rs1 = (instr >> 15) & 0b11111;
 				imm = (instr >> 20);
+				byte b;
+				short s;
 				// Add functionality
+				switch (funct3) {
+				case 0b000: { //LB
+					// need logic to select the correct byte
+					if ((imm+reg[rs1]) % 4 == 0) { // first byte at index 
+						b = (byte)(mem[imm + reg[rs1]]); // by casting to byte it should sign extend automatically
+						reg[rd] = (int)b;
+					}
+					else if((imm+reg[rs1]) % 4 == 1) { // second byte
+						b = (byte)(mem[imm + reg[rs1]] >> 8);
+						reg[rd] = (int)b;
+					}
+					else if((imm+reg[rs1]) % 4 == 2) {
+						b = (byte)(mem[imm + reg[rs1]] >> 16);
+						reg[rd] = (int)b;
+					}
+					else { // last byte
+						b = (byte)(mem[imm + reg[rs1]] >> 24);
+						reg[rd] = (int)b;
+					}
+				}
+				case 0b001: { //LH
+					//TODO: clarify whether or not the 16 bits must be located in one slot of array or if they can span 2
+					if ((imm+reg[rs1]) % 4 == 0) { // lower 16 bits
+						s = (short)(mem[imm + reg[rs1]]);
+						reg[rd] = (int)s;
+					}
+					else { //upper 16 bits
+						s = (short)(mem[imm + reg[rs1]] >> 16);
+						reg[rd] = (int)s;
+					}
+				}
+				case 0b010: { //LW
+					//TODO: Clarify whether or not we need to check to see that these align correctly or if this is implied
+					reg[rd] = mem[imm+reg[rs1]];
+					break;
+				}
+				case 0b100: { //LBU
+					//note, no need to type-cast here as this will result in signed extension
+					if ((imm+reg[rs1]) % 4 == 0) { //first byte
+						reg[rd] = (mem[imm + reg[rs1]]) & 0xff;
+					}
+					else if ((imm + reg[rs1]) % 4 == 1) { // second byte
+						reg[rd] = (mem[imm + reg[rs1]] >> 8 ) & 0xff;
+					}
+					else if ((imm + reg[rs1]) % 4 == 2) { //third byte
+						reg[rd] = (mem[imm + reg[rs1]] >> 16) & 0xff;
+					}
+					else {
+						reg[rd] = (mem[imm + reg[rs1]] >> 24) & 0xff;
+					}
+				}
+				case 0b101: { //LHU
+					//no type casting to avoid signed representation
+					if ((imm + reg[rs1]) % 4 == 0) { // lower 16 bits
+						reg[rd] = (mem[imm + reg[rs1]]) & 0xffff;
+					}
+					else { // upper 16 bits
+						reg[rd] = (mem[imm + reg[rs1]] >> 16) & 0xffff;
+					}
+				}
+				}
 				System.out.println("Add Loads Functionality");
 				break;
 			}
@@ -146,8 +209,33 @@ public class IsaSim {
 				funct3 = (instr >> 12) & 0b111;
 				rs1 = (instr >> 15) & 0b11111;
 				rs2 = (instr >> 20) & 0b11111;
+				int b;
 				imm = ((instr >> 7) & 0b11111) + (((instr >> 25) & 0b1111111) << 5);
 				// Add functionality
+				switch(funct3) {
+				case 0b000: { //SB
+					b = reg[rs2] & 0xff;
+					if ((imm + reg[rs1]) % 4 == 0) { //first byte
+						mem[imm + reg[rs1]] = ((mem[imm+reg[rs1]] | 0xff) & b);
+					}
+					else if ((imm + reg[rs1]) % 4 == 1)  { // second byte
+						mem[imm + reg[rs1]] = ((mem[imm+reg[rs1]] | 0xff00) & (b << 8));
+					}
+					else if ((imm + reg[rs1]) % 4 == 2) { // third byte
+						mem[imm + reg[rs1]] = ((mem[imm+reg[rs1]] | 0xff0000) & (b << 16));
+					}
+					else { // last byte
+						mem[imm + reg[rs1]] = ((mem[imm+reg[rs1]] | 0xff000000) & (b << 24));
+					}
+					
+				}
+				case 0b001 : { //SH
+					
+				}
+				case 0b010: { //SW
+					mem[imm + reg[rs1]] = reg[rs2]; 
+				}
+				}
 				System.out.println("Add S-Type Functionality");
 				break;
 			}
