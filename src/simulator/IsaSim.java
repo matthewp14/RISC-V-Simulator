@@ -13,20 +13,22 @@ import java.nio.ByteBuffer;
 import java.util.*;
 public class IsaSim {
 
-	//static int pc;
+	static int pc;
 	static int reg[] = new int[32];
 
 	// 4MB storage
-	//static int mem[] = new int[1000000];
+	static int mem[] = new int[1000000];
 
 	public static void main(String[] args) {
-		reg[0] = 0;
-		int prog[] = readByteFile(args[0]);
+		
+		reg[0] = 0; //hard code to 0
+		int prog[] = readByteFile(args[0]); //array of instructions
 		System.out.println("Hello RISC-V World!");
 
-		int pc = 0;
+
 		reg[2] = 999000; // initialize sp towards end of mem array but with space for error
-		int mem[] = new int[1000000];
+		
+		//initial values
 		int instr = Integer.MIN_VALUE;
 		int opcode = Integer.MIN_VALUE;
 		int rd = Integer.MIN_VALUE;
@@ -37,6 +39,7 @@ public class IsaSim {
 		int funct7 = Integer.MIN_VALUE;
 		int shamt = Integer.MIN_VALUE;
 		boolean branch = false;
+		//loop until broken
 		loop: while(true) {		
 			// Little to Big Endian
 			instr = Integer.reverseBytes(prog[pc]);
@@ -54,7 +57,7 @@ public class IsaSim {
 			case 0b0010111: {
 				rd = (instr >> 7) & 0b11111;
 				imm = ((instr >> 12) << 12);
-				reg[rd] = pc*4 + imm;
+				reg[rd] = pc*4 + imm; //store the byte address *not* the array address
 				break;
 			}
 			
@@ -62,10 +65,8 @@ public class IsaSim {
 			case 0b1101111: {
 				rd = (instr >> 7) & 0b11111;
 				imm = (((instr >> 21) & 0b1111111111)) + (((instr >> 20) & 0b1) << 11) + (((instr >> 12) & 0b11111111) << 12) + (((instr >> 31) & -1) << 20) <<1; 
-				// Add functionality
 				branch = true;
-				reg[rd] = pc*4 + 4;
-				System.out.println("Add J-Type Functionality");
+				reg[rd] = pc*4 + 4; //store byte address *not* array address
 				break;
 			}
 			
@@ -75,12 +76,10 @@ public class IsaSim {
 				funct3 = (instr >> 12) & 0b111;
 				rs1 = (instr >> 15) & 0b11111;
 				imm = (instr >> 20) >> 1 << 1;
-				// Add functionality
-				reg[rd] = pc*4+4;
+				reg[rd] = pc*4 + 4; // store byte address 
 				branch = true;
-				pc = 0; // reset for simplicity in logic below
-				imm = imm + reg[rs1];
-				System.out.println("Add JALR Functionality");
+				pc = 0; // reset for simplicity in branching logic
+				imm = imm + reg[rs1]; // byte value of new address
 				break;
 			}
 			
@@ -93,7 +92,7 @@ public class IsaSim {
 				// Add functionality
 				switch (funct3) {
 				case 0b000: { // BEQ
-					if (reg[rs1]== reg[rs2]) {
+					if (reg[rs1] == reg[rs2]) {
 						branch = true; 	
 					}
 					break;
@@ -128,14 +127,7 @@ public class IsaSim {
 					}
 					break;
 				}
-				default: {
-					System.out.println("B-Type with funct3" + funct3 + " not yet implemented");
-					break;
 				}
-					
-				}
-				
-				System.out.println("Add B-Type Functionality: Unsigned");
 				break;
 			}
 			
@@ -148,19 +140,20 @@ public class IsaSim {
 				byte b;
 				short s;
 				int eff_addr = imm/4 + reg[rs1];
+				if (rs1 == 1) eff_addr = (imm + reg[rs1])/4; //ra register is byte addressed all others should hold regular values
 				// Add functionality
 				switch (funct3) {
 				case 0b000: { //LB
-					// need logic to select the correct byte
+					// byte selection logic
 					if ((imm+reg[rs1]) % 4 == 0) { // first byte at index 
-						b = (byte)(mem[eff_addr]); // by casting to byte it should sign extend automatically
+						b = (byte)(mem[eff_addr]); // use byte to ensure correct sign extension
 						reg[rd] = (int)b;
 					}
 					else if((imm+reg[rs1]) % 4 == 1) { // second byte
 						b = (byte)(mem[eff_addr] >> 8);
 						reg[rd] = (int)b;
 					}
-					else if((imm+reg[rs1]) % 4 == 2) {
+					else if((imm+reg[rs1]) % 4 == 2) { //third
 						b = (byte)(mem[eff_addr] >> 16);
 						reg[rd] = (int)b;
 					}
@@ -171,7 +164,7 @@ public class IsaSim {
 					break;
 				}
 				case 0b001: { //LH
-					//TODO: clarify whether or not the 16 bits must be located in one slot of array or if they can span 2
+					// use short data type to ensure correct sign extension
 					if ((imm+reg[rs1]) % 4 == 0) { // lower 16 bits
 						s = (short)(mem[eff_addr]);
 						reg[rd] = (int)s;
@@ -183,7 +176,6 @@ public class IsaSim {
 					break;
 				}
 				case 0b010: { //LW
-					//TODO: Clarify whether or not we need to check to see that these align correctly or if this is implied
 					reg[rd] = mem[eff_addr];
 					break;
 				}
@@ -214,7 +206,6 @@ public class IsaSim {
 					break;
 				}
 				}
-				System.out.println("Add Loads Functionality");
 				break;
 			}
 			
@@ -257,12 +248,10 @@ public class IsaSim {
 					
 				}
 				case 0b010: { //SW
-					System.out.println("Saving "+ reg[rs2]+ " in memory index: "+ eff_addr);
 					mem[eff_addr] = reg[rs2]; 
 					break;
 				}
 				}
-				System.out.println("Add S-Type Functionality");
 				break;
 			}
 			
@@ -324,10 +313,6 @@ public class IsaSim {
 						reg[rd] = reg[rs1] & imm;
 						break;
 					}
-					default: {
-						System.out.println("Normal I-Type with funct3 " + funct3 + " not yet implemented");
-						break;
-					}
 					}
 				}
 				break;
@@ -385,10 +370,6 @@ public class IsaSim {
 				}
 				case 0b111: { //AND
 					reg[rd] = reg[rs1] & reg[rs2];
-					break;
-				}
-				default: {
-					System.out.println("R-Type with funct3 " + funct3 + " not yet implemented");
 					break;
 				}
 				}
