@@ -216,20 +216,27 @@ public class IsaSim {
 				case 0b000: { //SB
 					b = reg[rs2] & 0xff;
 					if ((imm + reg[rs1]) % 4 == 0) { //first byte
-						mem[imm + reg[rs1]] = ((mem[imm+reg[rs1]] | 0xff) & b);
+						mem[imm + reg[rs1]] = ((mem[imm+reg[rs1]] & 0xffffff00) | b);
 					}
 					else if ((imm + reg[rs1]) % 4 == 1)  { // second byte
-						mem[imm + reg[rs1]] = ((mem[imm+reg[rs1]] | 0xff00) & (b << 8));
+						mem[imm + reg[rs1]] = ((mem[imm+reg[rs1]] & 0xffff00ff) | (b << 8));
 					}
 					else if ((imm + reg[rs1]) % 4 == 2) { // third byte
-						mem[imm + reg[rs1]] = ((mem[imm+reg[rs1]] | 0xff0000) & (b << 16));
+						mem[imm + reg[rs1]] = ((mem[imm+reg[rs1]] & 0xff00ffff) | (b << 16));
 					}
 					else { // last byte
-						mem[imm + reg[rs1]] = ((mem[imm+reg[rs1]] | 0xff000000) & (b << 24));
+						mem[imm + reg[rs1]] = ((mem[imm+reg[rs1]] & 0x00ffffff) | (b << 24));
 					}
 					
 				}
 				case 0b001 : { //SH
+					b = reg[rs2] & 0xffff;
+					if ((imm + reg[rs1]) % 4 == 0) { // store in lower bits
+						mem[imm + reg[rs1]] = ((mem[imm+reg[rs1]] & 0xffff0000) | b);
+					}
+					else { // upper 16 bits
+						mem[imm + reg[rs1]] = ((mem[imm+reg[rs1]] & 0x0000ffff) | (b << 16));
+					}
 					
 				}
 				case 0b010: { //SW
@@ -429,7 +436,10 @@ public class IsaSim {
 
 	}
 	
-	
+	/*
+	 * accepts and reads byte file storing 4 sequential bytes as integers into array 
+	 * returns int array
+	 */
 	public static int[] readByteFile(String inFile) {
 		try (
 			InputStream inputStream = new FileInputStream(inFile);
