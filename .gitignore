@@ -1,4 +1,6 @@
 /bin/
 .project 
 .classpath
+*.DS_Store
+.gitignore.swp
 
