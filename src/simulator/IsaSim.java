@@ -1,4 +1,4 @@
-package src.simulator;
+package simulator;
 /**
  * RISC-V Instruction Set Simulator
  * 
@@ -10,24 +10,21 @@ package src.simulator;
  */
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.util.*;
 public class IsaSim {
 
-	static int pc;
-	static int reg[] = new int[32];
-
-	// 4MB storage
-	static int mem[] = new int[1000000];
-
 	public static void main(String[] args) {
-		
+		int mem[] = new int[536870911];
+		int reg[] = new int[32];
+		int pc = 0;
+		String testFlag = (args.length > 1) ? args[1] : null;
+
 		reg[0] = 0; //hard code to 0
 		int prog[] = readByteFile(args[0]); //array of instructions
 		System.out.println("Hello RISC-V World!");
 
 
-		reg[2] = 999000; // initialize sp towards end of mem array but with space for error
-		
+		reg[2] = 0x7ffffff0; // initialize sp towards end of mem array but with space for error
+		reg[3] = 0x10000000;
 		//initial values
 		int instr = Integer.MIN_VALUE;
 		int opcode = Integer.MIN_VALUE;
@@ -64,7 +61,7 @@ public class IsaSim {
 			// J-Type
 			case 0b1101111: {
 				rd = (instr >> 7) & 0b11111;
-				imm = (((instr >> 21) & 0b1111111111)) + (((instr >> 20) & 0b1) << 11) + (((instr >> 12) & 0b11111111) << 12) + (((instr >> 31) & -1) << 20) <<1; 
+				imm = (((instr >> 21) & 0b1111111111) << 1)  + (((instr >> 20) & 0b1) << 11) + (((instr >> 12) & 0b11111111) << 12) + ((instr >> 31) << 20); 
 				branch = true;
 				reg[rd] = pc*4 + 4; //store byte address *not* array address
 				break;
@@ -88,7 +85,7 @@ public class IsaSim {
 				funct3 = (instr >> 12) & 0b111;
 				rs1 = (instr >> 15) & 0b11111;
 				rs2 = (instr >> 20) & 0b11111;
-				imm = (((instr >> 8) & 0b1111) << 1) + (((instr >> 25) & 0b111111) << 5) + (((instr >> 7) & 0b1) << 11) + (((instr >> 31) & -1) << 12); 
+				imm = (((instr >> 8) & 0b1111) << 1) + (((instr >> 25) & 0b111111) << 5) + (((instr >> 7) & 0b1) << 11) + ((instr >> 31)  << 12); 
 				// Add functionality
 				switch (funct3) {
 				case 0b000: { // BEQ
@@ -139,8 +136,7 @@ public class IsaSim {
 				imm = (instr >> 20);
 				byte b;
 				short s;
-				int eff_addr = imm/4 + reg[rs1];
-				if (rs1 == 1) eff_addr = (imm + reg[rs1])/4; //ra register is byte addressed all others should hold regular values
+				int eff_addr = (imm + reg[rs1])/4;
 				// Add functionality
 				switch (funct3) {
 				case 0b000: { //LB
@@ -164,19 +160,38 @@ public class IsaSim {
 					break;
 				}
 				case 0b001: { //LH
-					// use short data type to ensure correct sign extension
-					if ((imm+reg[rs1]) % 4 == 0) { // lower 16 bits
+					// use short data type to ensure correct sign extension					
+					if ((imm + reg[rs1]) % 4 == 0) { // lower 16 bits
 						s = (short)(mem[eff_addr]);
 						reg[rd] = (int)s;
 					}
-					else { //upper 16 bits
+					else if ((imm + reg[rs1]) % 4 == 1)  { // Middle 16 bits
+						s = (short)((mem[eff_addr] & 0x00ffff00) >> 8);
+						reg[rd] = (int)s;
+					}
+					else if ((imm + reg[rs1]) % 4 == 2) { // upper 16 bits
 						s = (short)(mem[eff_addr] >> 16);
+						reg[rd] = (int)s;
+					}
+					else { // Across two words
+						s = (short)((mem[eff_addr] >>> 24) | ((mem[eff_addr+1] & 0xff) << 8));
 						reg[rd] = (int)s;
 					}
 					break;
 				}
 				case 0b010: { //LW
-					reg[rd] = mem[eff_addr];
+					if ((imm + reg[rs1]) % 4 == 0) { // 1 word
+						reg[rd] = mem[eff_addr];
+					}
+					else if ((imm + reg[rs1]) % 4 == 1)  { // 3 first, 1 second
+						reg[rd] = ((mem[eff_addr] >>> 8) | (mem[eff_addr+1] << 24));
+					}
+					else if ((imm + reg[rs1]) % 4 == 2) { // 2 and 2
+						reg[rd] = ((mem[eff_addr] >>> 16) | (mem[eff_addr+1] << 16));
+					}
+					else { // 1 and 3
+						reg[rd] = ((mem[eff_addr] >>> 24) | (mem[eff_addr+1] << 8));
+					}
 					break;
 				}
 				case 0b100: { //LBU
@@ -200,8 +215,14 @@ public class IsaSim {
 					if ((imm + reg[rs1]) % 4 == 0) { // lower 16 bits
 						reg[rd] = (mem[eff_addr]) & 0xffff;
 					}
-					else { // upper 16 bits
+					else if ((imm + reg[rs1]) % 4 == 1)  { // Middle 16 bits
+						reg[rd] = (mem[eff_addr] >> 8) & 0xffff;
+					}
+					else if ((imm + reg[rs1]) % 4 == 2) { // upper 16 bits
 						reg[rd] = (mem[eff_addr] >> 16) & 0xffff;
+					}
+					else { // Across two words
+						reg[rd] = ((mem[eff_addr] >>> 24) | ((mem[eff_addr+1] & 0xff) << 8));
 					}
 					break;
 				}
@@ -215,23 +236,23 @@ public class IsaSim {
 				rs1 = (instr >> 15) & 0b11111;
 				rs2 = (instr >> 20) & 0b11111;
 				int b;
-				imm = ((instr >> 7) & 0b11111) + (((instr >> 25) & -1) << 5);
-				int eff_addr = imm/4 + reg[rs1];
+				imm = ((instr >> 7) & 0b11111) + ((instr >> 25) << 5);
+				int eff_addr = (imm + reg[rs1])/4;
 				// Add functionality
 				switch(funct3) {
 				case 0b000: { //SB
 					b = reg[rs2] & 0xff;
 					if ((imm + reg[rs1]) % 4 == 0) { //first byte
-						mem[imm + reg[rs1]] = ((mem[eff_addr] & 0xffffff00) | b);
+						mem[eff_addr] = ((mem[eff_addr] & 0xffffff00) | b);
 					}
 					else if ((imm + reg[rs1]) % 4 == 1)  { // second byte
-						mem[imm + reg[rs1]] = ((mem[eff_addr] & 0xffff00ff) | (b << 8));
+						mem[eff_addr] = ((mem[eff_addr] & 0xffff00ff) | (b << 8));
 					}
 					else if ((imm + reg[rs1]) % 4 == 2) { // third byte
-						mem[imm + reg[rs1]] = ((mem[eff_addr] & 0xff00ffff) | (b << 16));
+						mem[eff_addr] = ((mem[eff_addr] & 0xff00ffff) | (b << 16));
 					}
 					else { // last byte
-						mem[imm + reg[rs1]] = ((mem[eff_addr] & 0x00ffffff) | (b << 24));
+						mem[eff_addr] = ((mem[eff_addr] & 0x00ffffff) | (b << 24));
 					}
 					break;
 					
@@ -239,16 +260,38 @@ public class IsaSim {
 				case 0b001 : { //SH
 					b = reg[rs2] & 0xffff;
 					if ((imm + reg[rs1]) % 4 == 0) { // store in lower bits
-						mem[imm + reg[rs1]] = ((mem[(eff_addr)/4] & 0xffff0000) | b);
+						mem[eff_addr] = ((mem[eff_addr] & 0xffff0000) | b);
 					}
-					else { // upper 16 bits
-						mem[imm + reg[rs1]] = ((mem[eff_addr] & 0x0000ffff) | (b << 16));
+					else if ((imm + reg[rs1]) % 4 == 1)  { // Middle 16 bits
+						mem[eff_addr] = ((mem[eff_addr] & 0xff0000ff) | (b << 8));
+					}
+					else if ((imm + reg[rs1]) % 4 == 2) { // upper 16 bits
+						mem[eff_addr] = ((mem[eff_addr] & 0x0000ffff) | (b << 16));
+					}
+					else { // Across two words
+						mem[eff_addr] = ((mem[eff_addr] & 0x00ffffff) | ((b & 0x00ff) << 24));
+						mem[eff_addr+1] = ((mem[eff_addr+1] & 0xffffff00) | ((b & 0xff00) >> 8));
 					}
 					break;
 					
 				}
 				case 0b010: { //SW
-					mem[eff_addr] = reg[rs2]; 
+					b = reg[rs2];
+					if ((imm + reg[rs1]) % 4 == 0) { // 1 word
+						mem[eff_addr] = reg[rs2]; 
+					}
+					else if ((imm + reg[rs1]) % 4 == 1)  { // 3 first, 1 second
+						mem[eff_addr] = ((mem[eff_addr] & 0x000000ff) | (b << 8));
+						mem[eff_addr+1] = ((mem[eff_addr+1] & 0xffffff00) | (b >>> 24));
+					}
+					else if ((imm + reg[rs1]) % 4 == 2) { // 2 and 2
+						mem[eff_addr] = ((mem[eff_addr] & 0x0000ffff) | (b << 16));
+						mem[eff_addr+1] = ((mem[eff_addr+1] & 0xffff0000) | (b >>> 16));
+					}
+					else { // 1 and 3
+						mem[eff_addr] = ((mem[eff_addr] & 0x00ffffff) | (b << 24));
+						mem[eff_addr+1] = ((mem[eff_addr+1] & 0xff000000) | (b >>> 8));
+					}
 					break;
 				}
 				}
@@ -287,7 +330,6 @@ public class IsaSim {
 					imm = (instr >> 20);
 					switch (funct3) {
 					case 0b000: { //ADDI
-						if (rs1 == 2) imm = imm/4;
 						reg[rd] = reg[rs1] + imm;
 						break;
 					}
@@ -379,25 +421,43 @@ public class IsaSim {
 			// E-Call
 			case 0b1110011: {
 				switch (reg[10]) {
-				// Prints int in a11
+				// Prints int in a1
 				case 1: {
-					System.out.println("Hi" + reg[11]);
+					System.out.println(reg[11]);
 					break;
 				}
 				
-				// Add ID = 4
-				// Add ID = 9
+				// Prints string at mem address a1
+				case 4: {
+					int loc = reg[11];
+					int val = mem [loc];
+					String s = "";
+					char ch = 0;
+					int o = 0;
+					do {
+						if (o == 32) {
+							loc++;
+							val = mem [loc];
+							o = 0;
+						}
+						ch = (char)(val >>> o);
+						s += ch;
+						o += 8;
+					} while (ch != 0);
+					System.out.println(s);
+					break;
+				}
 
 				// Exits
 				case 10: {
 					break loop;
 				}
-				// Prints ascii char in a11
+				// Prints ascii char in a1
 				case 11: {
 					System.out.println(((char)reg[11]));
 					break;
 				}
-				// Exits wit error in a1
+				// Exits with error in a1
 				case 17: {
 					System.out.println("Return Code: " + reg[11]);
 					break loop;
@@ -435,7 +495,37 @@ public class IsaSim {
 		}
 		System.out.println();
 		System.out.println("Program exit");
-
+		writeOutput(reg, testFlag);
+	}
+	public static void writeOutput(int[] reg, String testFlag) {
+		int lilEnd;
+		if (testFlag != null) {
+			if (testFlag.equals("test")) {
+				reg[2]=0;
+				reg[3]=0;
+			}
+			else if (testFlag.equals("test_show_sp")) {
+				reg[3]=0;
+			}
+		}
+		byte[] ba = new byte[128];
+		for (int i = 0; i < reg.length; i++) {
+			lilEnd = reg[i];
+			ba[4*i] = (byte) (lilEnd & 0xff);
+			lilEnd >>= 8;
+			ba[4*i+1] = (byte) (lilEnd & 0xff);
+			lilEnd >>= 8;
+			ba[4*i+2] = (byte) (lilEnd & 0xff);
+			lilEnd >>= 8;
+			ba[4*i+3] = (byte) lilEnd;
+		}
+		try {
+			FileOutputStream stream = new FileOutputStream("output.res");
+		    stream.write(ba);
+		    stream.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/*
