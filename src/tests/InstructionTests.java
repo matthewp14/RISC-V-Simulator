@@ -127,16 +127,6 @@ class InstructionTests  {
 		assertTrue(Arrays.equals(Files.readAllBytes(trueResults), Files.readAllBytes(outputFile)));
 	}
 	
-//	@Test
-//	void ecall() throws IOException {
-//		String testName = "test_ecall";
-//		String path = testPath + testName + ".bin";
-//		String[] arguments = new String[]{path, "test"};
-//		IsaSim.main(arguments);
-//		Path trueResults = Paths.get(testPath + testName + ".res");
-//		assertTrue(Arrays.equals(Files.readAllBytes(trueResults), Files.readAllBytes(outputFile)));
-//	}
-	
 	@Test
 	void jal() throws IOException {
 		String testName = "test_jal";
@@ -246,106 +236,6 @@ class InstructionTests  {
 		Path trueResults = Paths.get(testPath + testName + ".res");
 		assertTrue(Arrays.equals(Files.readAllBytes(trueResults), Files.readAllBytes(outputFile)));
 	}
-	
-//	@Test
-//	void random1() throws IOException {
-//		String testName = "test_random1";
-//		String path = testPath + testName + ".bin";
-//		String[] arguments = new String[]{path, "test"};
-//		IsaSim.main(arguments);
-//		Path trueResults = Paths.get(testPath + testName + ".res");
-//		assertTrue(Arrays.equals(Files.readAllBytes(trueResults), Files.readAllBytes(outputFile)));
-//	}
-//
-//	@Test
-//	void random2() throws IOException {
-//		String testName = "test_random2";
-//		String path = testPath + testName + ".bin";
-//		String[] arguments = new String[]{path, "test"};
-//		IsaSim.main(arguments);
-//		Path trueResults = Paths.get(testPath + testName + ".res");
-//		assertTrue(Arrays.equals(Files.readAllBytes(trueResults), Files.readAllBytes(outputFile)));
-//	}
-//	
-//	@Test
-//	void random3() throws IOException {
-//		String testName = "test_random3";
-//		String path = testPath + testName + ".bin";
-//		String[] arguments = new String[]{path, "test"};
-//		IsaSim.main(arguments);
-//		Path trueResults = Paths.get(testPath + testName + ".res");
-//		assertTrue(Arrays.equals(Files.readAllBytes(trueResults), Files.readAllBytes(outputFile)));
-//	}
-//	
-//	@Test
-//	void random4() throws IOException {
-//		String testName = "test_random4";
-//		String path = testPath + testName + ".bin";
-//		String[] arguments = new String[]{path, "test"};
-//		IsaSim.main(arguments);
-//		Path trueResults = Paths.get(testPath + testName + ".res");
-//		assertTrue(Arrays.equals(Files.readAllBytes(trueResults), Files.readAllBytes(outputFile)));
-//	}
-//	
-//	@Test
-//	void random5() throws IOException {
-//		String testName = "test_random5";
-//		String path = testPath + testName + ".bin";
-//		String[] arguments = new String[]{path, "test"};
-//		IsaSim.main(arguments);
-//		Path trueResults = Paths.get(testPath + testName + ".res");
-//		assertTrue(Arrays.equals(Files.readAllBytes(trueResults), Files.readAllBytes(outputFile)));
-//	}
-//	
-//	@Test
-//	void random6() throws IOException {
-//		String testName = "test_random6";
-//		String path = testPath + testName + ".bin";
-//		String[] arguments = new String[]{path, "test"};
-//		IsaSim.main(arguments);
-//		Path trueResults = Paths.get(testPath + testName + ".res");
-//		assertTrue(Arrays.equals(Files.readAllBytes(trueResults), Files.readAllBytes(outputFile)));
-//	}
-//	
-//	@Test
-//	void random7() throws IOException {
-//		String testName = "test_random7";
-//		String path = testPath + testName + ".bin";
-//		String[] arguments = new String[]{path, "test"};
-//		IsaSim.main(arguments);
-//		Path trueResults = Paths.get(testPath + testName + ".res");
-//		assertTrue(Arrays.equals(Files.readAllBytes(trueResults), Files.readAllBytes(outputFile)));
-//	}
-//	
-//	@Test
-//	void random8() throws IOException {
-//		String testName = "test_random8";
-//		String path = testPath + testName + ".bin";
-//		String[] arguments = new String[]{path, "test"};
-//		IsaSim.main(arguments);
-//		Path trueResults = Paths.get(testPath + testName + ".res");
-//		assertTrue(Arrays.equals(Files.readAllBytes(trueResults), Files.readAllBytes(outputFile)));
-//	}
-//	
-//	@Test
-//	void random9() throws IOException {
-//		String testName = "test_random9";
-//		String path = testPath + testName + ".bin";
-//		String[] arguments = new String[]{path, "test"};
-//		IsaSim.main(arguments);
-//		Path trueResults = Paths.get(testPath + testName + ".res");
-//		assertTrue(Arrays.equals(Files.readAllBytes(trueResults), Files.readAllBytes(outputFile)));
-//	}
-//	
-//	@Test
-//	void random10() throws IOException {
-//		String testName = "test_random10";
-//		String path = testPath + testName + ".bin";
-//		String[] arguments = new String[]{path, "test"};
-//		IsaSim.main(arguments);
-//		Path trueResults = Paths.get(testPath + testName + ".res");
-//		assertTrue(Arrays.equals(Files.readAllBytes(trueResults), Files.readAllBytes(outputFile)));
-//	}
 	
 	@Test
 	void sb() throws IOException {

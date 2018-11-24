@@ -71,6 +71,10 @@ public class IsaSim {
 			case 0b1100111: {
 				rd = (instr >> 7) & 0b11111;
 				funct3 = (instr >> 12) & 0b111;
+				if (funct3 != 0b000) {
+					System.out.println("JALR should have a funct3 = 0b000. Unknown instruction.");
+					break;
+				}
 				rs1 = (instr >> 15) & 0b11111;
 				imm = (instr >> 20) >> 1 << 1;
 				reg[rd] = pc*4 + 4; // store byte address 
@@ -122,6 +126,10 @@ public class IsaSim {
 					if (Integer.compareUnsigned(reg[rs1], reg[rs2])>=0) {
 						branch = true;
 					}
+					break;
+				}
+				default: {
+					System.out.println("Trying to perform an unimplemented B-Type");
 					break;
 				}
 				}
@@ -226,6 +234,10 @@ public class IsaSim {
 					}
 					break;
 				}
+				default: {
+					System.out.println("Trying to perform an unimplemented Load");
+					break;
+				}
 				}
 				break;
 			}
@@ -294,6 +306,10 @@ public class IsaSim {
 					}
 					break;
 				}
+				default: {
+					System.out.println("Trying to perform an unimplemented Store");
+					break;
+				}
 				}
 				break;
 			}
@@ -316,8 +332,11 @@ public class IsaSim {
 					case 0b101: {
 						if (funct7 == 0) { //SRLI
 							reg[rd] = reg[rs1] >>> shamt;
-						} else { //SRAI
+						} else if (funct7 == 0b0100000) { //SRAI
 							reg[rd] = reg[rs1] >> shamt;
+						}
+						else {
+							System.out.println("Unsupported I-type (invalid funct7)");
 						}
 						break;
 					}
@@ -355,6 +374,10 @@ public class IsaSim {
 						reg[rd] = reg[rs1] & imm;
 						break;
 					}
+					default: {
+						System.out.println("Unsupported I-Type (funct3)");
+						break;
+					}
 					}
 				}
 				break;
@@ -367,6 +390,10 @@ public class IsaSim {
 				rs1 = (instr >> 15) & 0b11111;
 				rs2 = (instr >> 20) & 0b11111;
 				funct7 = (instr >> 25);
+				if (funct7 != 0 && (funct3 != 0b000 && funct3 != 0b101)) {
+					System.out.println("Unsupported R-type (invalid funct7)");
+					break;
+				}
 				switch (funct3) {
 				case 0b000: {
 					// Add
@@ -374,8 +401,11 @@ public class IsaSim {
 						reg[rd] = reg[rs1] + reg[rs2];
 					}
 					// Subtract
-					else {
+					else if (funct7 == 0b0100000){
 						reg[rd] = reg[rs1] - reg[rs2];
+					}
+					else {
+						System.out.println("Unsupported R-type (invalid funct7)");
 					}
 					break;
 				} 
@@ -402,9 +432,13 @@ public class IsaSim {
 					shamt = (reg[rs2] & 0b11111);
 					if (funct7 == 0) { //SRL
 						reg[rd] = reg[rs1] >>> shamt;
-					} else { //SRA
+					} else if (funct7 == 0b0100000) { //SRA
 						reg[rd] = reg[rs1] >> shamt;
-					} break;
+					}
+					else {
+						System.out.println("Unsupported R-type (invalid funct7)");
+					}
+					break;
 				}
 				case 0b110: { //OR
 					reg[rd] = reg[rs1] | reg[rs2];
@@ -420,6 +454,10 @@ public class IsaSim {
 			
 			// E-Call
 			case 0b1110011: {
+				if (instr != 0b00000000000000000000000001110011) {
+					System.out.println("Ecall has wrong upper bits");
+					break;
+				}
 				switch (reg[10]) {
 				// Prints int in a1
 				case 1: {
@@ -429,18 +467,19 @@ public class IsaSim {
 				
 				// Prints string at mem address a1
 				case 4: {
-					int loc = reg[11];
-					int val = mem [loc];
+					int byteLoc = reg[11];
+					int eff_addr = byteLoc/4;
+					int val = mem [eff_addr];
 					String s = "";
 					char ch = 0;
-					int o = 0;
+					int o = (byteLoc % 4) * 8;
 					do {
 						if (o == 32) {
-							loc++;
-							val = mem [loc];
+							eff_addr++;
+							val = mem [eff_addr];
 							o = 0;
 						}
-						ch = (char)(val >>> o);
+						ch = (char)((val >>> o) & 0xff) ;
 						s += ch;
 						o += 8;
 					} while (ch != 0);
@@ -506,6 +545,9 @@ public class IsaSim {
 			}
 			else if (testFlag.equals("test_show_sp")) {
 				reg[3]=0;
+			}
+			else if (testFlag.equals("test_show_gp")) {
+				reg[2]=0;
 			}
 		}
 		byte[] ba = new byte[128];
