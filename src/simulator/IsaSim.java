@@ -12,14 +12,21 @@ import java.io.*;
 import java.nio.ByteBuffer;
 public class IsaSim {
 
+	static int progSize = 0;
+	
 	public static void main(String[] args) {
-		int mem[] = new int[536870911];
+		
+//		int mem[] = new int[536870911];
 		int reg[] = new int[32];
+		
 		int pc = 0;
+		progSize = 0;
 		String testFlag = (args.length > 1) ? args[1] : null;
 
 		reg[0] = 0; //hard code to 0
-		int prog[] = readByteFile(args[0]); //array of instructions
+		
+//		int prog[] = readByteFile(args[0]); //array of instructions
+		int mem[] = readByteFile(args[0]); //array of instructions
 		System.out.println("Hello RISC-V World!");
 
 
@@ -39,7 +46,9 @@ public class IsaSim {
 		//loop until broken
 		loop: while(true) {		
 			// Little to Big Endian
-			instr = Integer.reverseBytes(prog[pc]);
+			
+//			instr = Integer.reverseBytes(prog[pc]);
+			instr = Integer.reverseBytes(mem[pc]);
 			opcode = instr & 0b1111111;
 			switch (opcode) {
 
@@ -521,7 +530,8 @@ public class IsaSim {
 				pc += imm/4;
 				branch = !branch;
 			}
-			if (pc >= prog.length) {
+//			if (pc >= prog.length) {
+			if (pc >= progSize) {
 				break loop;
 			}
 			for (int i = 0; i < reg.length; ++i) {
@@ -583,8 +593,10 @@ public class IsaSim {
 			ByteBuffer byteBuffer = ByteBuffer.wrap(fileBytes);
 			inputStream.read(fileBytes); // Read the byte file into the byte array
 			
-			int[] instArr = new int[ (int) (fileSize/4)]; // integer array of instructions
-			
+//			int[] instArr = new int[ (int) (fileSize/4)]; // integer array of instructions
+	
+			int[] instArr = new int[536870911];
+			progSize =  (int) (fileSize/4);
 			//loop through byte array and construct 32bit instructions
 			for (int i = 0 ; i < fileSize; i+=4) {
 				instArr[i/4] = byteBuffer.getInt();			
