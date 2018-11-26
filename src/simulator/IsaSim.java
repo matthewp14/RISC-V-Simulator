@@ -159,19 +159,19 @@ public class IsaSim {
 				case 0b000: { //LB
 					// byte selection logic
 					if ((imm+reg[rs1]) % 4 == 0) { // first byte at index 
-						b = (byte)(mem[eff_addr]); // use byte to ensure correct sign extension
+						b = (byte)(mem[eff_addr] >> 24); // use byte to ensure correct sign extension
 						reg[rd] = (int)b;
 					}
 					else if((imm+reg[rs1]) % 4 == 1) { // second byte
-						b = (byte)(mem[eff_addr] >> 8);
-						reg[rd] = (int)b;
-					}
-					else if((imm+reg[rs1]) % 4 == 2) { //third
 						b = (byte)(mem[eff_addr] >> 16);
 						reg[rd] = (int)b;
 					}
+					else if((imm+reg[rs1]) % 4 == 2) { //third
+						b = (byte)(mem[eff_addr] >> 8);
+						reg[rd] = (int)b;
+					}
 					else { // last byte
-						b = (byte)(mem[eff_addr] >> 24);
+						b = (byte)(mem[eff_addr]);
 						reg[rd] = (int)b;
 					}
 					break;
@@ -179,21 +179,18 @@ public class IsaSim {
 				case 0b001: { //LH
 					// use short data type to ensure correct sign extension					
 					if ((imm + reg[rs1]) % 4 == 0) { // lower 16 bits
-						s = (short)(mem[eff_addr]);
-						reg[rd] = (int)s;
+						s = (short)(mem[eff_addr] >> 16);
 					}
 					else if ((imm + reg[rs1]) % 4 == 1)  { // Middle 16 bits
 						s = (short)((mem[eff_addr] & 0x00ffff00) >> 8);
-						reg[rd] = (int)s;
 					}
 					else if ((imm + reg[rs1]) % 4 == 2) { // upper 16 bits
-						s = (short)(mem[eff_addr] >> 16);
-						reg[rd] = (int)s;
+						s = (short)(mem[eff_addr]);
 					}
 					else { // Across two words
-						s = (short)((mem[eff_addr] >>> 24) | ((mem[eff_addr+1] & 0xff) << 8));
-						reg[rd] = (int)s;
+						s = (short)((((mem[eff_addr] & 0xff) << 8)) | ((mem[eff_addr+1] & 0xff000000) >>> 24));
 					}
+					reg[rd] = (int)(Short.reverseBytes(s));
 					break;
 				}
 				case 0b010: { //LW
@@ -201,47 +198,50 @@ public class IsaSim {
 						reg[rd] = mem[eff_addr];
 					}
 					else if ((imm + reg[rs1]) % 4 == 1)  { // 3 first, 1 second
-						reg[rd] = ((mem[eff_addr] >>> 8) | (mem[eff_addr+1] << 24));
+						reg[rd] = ((mem[eff_addr] << 8) | (mem[eff_addr+1] >>> 24));
 					}
 					else if ((imm + reg[rs1]) % 4 == 2) { // 2 and 2
-						reg[rd] = ((mem[eff_addr] >>> 16) | (mem[eff_addr+1] << 16));
+						reg[rd] = ((mem[eff_addr] << 16) | (mem[eff_addr+1] >>> 16));
 					}
 					else { // 1 and 3
-						reg[rd] = ((mem[eff_addr] >>> 24) | (mem[eff_addr+1] << 8));
+						reg[rd] = ((mem[eff_addr] << 24) | (mem[eff_addr+1] >>> 8));
 					}
+					reg[rd] = Integer.reverseBytes(reg[rd]);
 					break;
 				}
 				case 0b100: { //LBU
 					//note, no need to type-cast here as this will result in signed extension
 					if ((imm+reg[rs1]) % 4 == 0) { //first byte
-						reg[rd] = (mem[eff_addr]) & 0xff;
+						reg[rd] = (mem[eff_addr] >> 24) & 0xff;
 					}
 					else if ((imm + reg[rs1]) % 4 == 1) { // second byte
-						reg[rd] = (mem[eff_addr] >> 8 ) & 0xff;
+						reg[rd] = (mem[eff_addr] >> 16 ) & 0xff;
 					}
 					else if ((imm + reg[rs1]) % 4 == 2) { //third byte
-						reg[rd] = (mem[eff_addr] >> 16) & 0xff;
+						reg[rd] = (mem[eff_addr] >> 8) & 0xff;
 					}
 					else {
-						reg[rd] = (mem[eff_addr] >> 24) & 0xff;
+						reg[rd] = (mem[eff_addr]) & 0xff;
 					}
 					break;
 				}
 				case 0b101: { //LHU
 					//no type casting to avoid signed representation
 					if ((imm + reg[rs1]) % 4 == 0) { // lower 16 bits
-						reg[rd] = (mem[eff_addr]) & 0xffff;
+						reg[rd] = (mem[eff_addr] >> 16) & 0xffff;
 					}
 					else if ((imm + reg[rs1]) % 4 == 1)  { // Middle 16 bits
 						reg[rd] = (mem[eff_addr] >> 8) & 0xffff;
 					}
 					else if ((imm + reg[rs1]) % 4 == 2) { // upper 16 bits
-						reg[rd] = (mem[eff_addr] >> 16) & 0xffff;
+						reg[rd] = (mem[eff_addr]) & 0xffff;
 					}
 					else { // Across two words
-						reg[rd] = ((mem[eff_addr] >>> 24) | ((mem[eff_addr+1] & 0xff) << 8));
+						reg[rd] = (((mem[eff_addr] & 0xff) << 8) | ((mem[eff_addr+1] & 0xff000000) >>> 24));
 					}
-					break;
+					reg[rd] = Integer.reverseBytes(reg[rd]);
+					reg[rd] >>>= 16;
+
 				}
 				default: {
 					System.out.println("Trying to perform an unimplemented Load");
@@ -264,54 +264,57 @@ public class IsaSim {
 				case 0b000: { //SB
 					b = reg[rs2] & 0xff;
 					if ((imm + reg[rs1]) % 4 == 0) { //first byte
-						mem[eff_addr] = ((mem[eff_addr] & 0xffffff00) | b);
+						mem[eff_addr] = ((mem[eff_addr] & 0x00ffffff) | (b << 24));
 					}
 					else if ((imm + reg[rs1]) % 4 == 1)  { // second byte
-						mem[eff_addr] = ((mem[eff_addr] & 0xffff00ff) | (b << 8));
-					}
-					else if ((imm + reg[rs1]) % 4 == 2) { // third byte
 						mem[eff_addr] = ((mem[eff_addr] & 0xff00ffff) | (b << 16));
 					}
+					else if ((imm + reg[rs1]) % 4 == 2) { // third byte
+						mem[eff_addr] = ((mem[eff_addr] & 0xffff00ff) | (b << 8));
+					}
 					else { // last byte
-						mem[eff_addr] = ((mem[eff_addr] & 0x00ffffff) | (b << 24));
+						mem[eff_addr] = ((mem[eff_addr] & 0xffffff00) | b);
 					}
 					break;
 					
 				}
 				case 0b001 : { //SH
-					b = reg[rs2] & 0xffff;
+					b = reg[rs2] & 0xffff;	
+					b = Integer.reverseBytes(b);
+					b >>>= 16;
 					if ((imm + reg[rs1]) % 4 == 0) { // store in lower bits
-						mem[eff_addr] = ((mem[eff_addr] & 0xffff0000) | b);
+						mem[eff_addr] = ((mem[eff_addr] & 0x0000ffff) | (b << 16));
 					}
 					else if ((imm + reg[rs1]) % 4 == 1)  { // Middle 16 bits
 						mem[eff_addr] = ((mem[eff_addr] & 0xff0000ff) | (b << 8));
 					}
 					else if ((imm + reg[rs1]) % 4 == 2) { // upper 16 bits
-						mem[eff_addr] = ((mem[eff_addr] & 0x0000ffff) | (b << 16));
+						mem[eff_addr] = ((mem[eff_addr] & 0xffff0000) | b);
 					}
 					else { // Across two words
-						mem[eff_addr] = ((mem[eff_addr] & 0x00ffffff) | ((b & 0x00ff) << 24));
-						mem[eff_addr+1] = ((mem[eff_addr+1] & 0xffffff00) | ((b & 0xff00) >> 8));
+						mem[eff_addr] = ((mem[eff_addr] & 0xffffff00) | ((b & 0xff00) >> 8));
+						mem[eff_addr+1] = ((mem[eff_addr+1] & 0x00ffffff) | ((b & 0x00ff) << 24));
 					}
 					break;
 					
 				}
 				case 0b010: { //SW
 					b = reg[rs2];
+					b = Integer.reverseBytes(b);
 					if ((imm + reg[rs1]) % 4 == 0) { // 1 word
-						mem[eff_addr] = reg[rs2]; 
+						mem[eff_addr] = b; 
 					}
 					else if ((imm + reg[rs1]) % 4 == 1)  { // 3 first, 1 second
-						mem[eff_addr] = ((mem[eff_addr] & 0x000000ff) | (b << 8));
-						mem[eff_addr+1] = ((mem[eff_addr+1] & 0xffffff00) | (b >>> 24));
+						mem[eff_addr] = ((mem[eff_addr] & 0xff000000) | (b >>> 8));
+						mem[eff_addr+1] = ((mem[eff_addr+1] & 0x00ffffff) | (b << 24));
 					}
 					else if ((imm + reg[rs1]) % 4 == 2) { // 2 and 2
-						mem[eff_addr] = ((mem[eff_addr] & 0x0000ffff) | (b << 16));
-						mem[eff_addr+1] = ((mem[eff_addr+1] & 0xffff0000) | (b >>> 16));
+						mem[eff_addr] = ((mem[eff_addr] & 0xffff0000) | (b >>> 16));
+						mem[eff_addr+1] = ((mem[eff_addr+1] & 0x0000ffff) | (b << 16));
 					}
 					else { // 1 and 3
-						mem[eff_addr] = ((mem[eff_addr] & 0x00ffffff) | (b << 24));
-						mem[eff_addr+1] = ((mem[eff_addr+1] & 0xff000000) | (b >>> 8));
+						mem[eff_addr] = ((mem[eff_addr] & 0xffffff00) | (b >>> 24));
+						mem[eff_addr+1] = ((mem[eff_addr+1] & 0x000000ff) | (b << 8));
 					}
 					break;
 				}
