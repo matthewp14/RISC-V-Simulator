@@ -27,7 +27,7 @@ public class IsaSim {
 		
 //		int prog[] = readByteFile(args[0]); //array of instructions
 		int mem[] = readByteFile(args[0]); //array of instructions
-		System.out.println("Hello RISC-V World!");
+		System.out.println("Startup");
 
 
 		reg[2] = 0x7ffffff0; // initialize sp towards end of mem array but with space for error
@@ -484,16 +484,18 @@ public class IsaSim {
 					int val = mem [eff_addr];
 					String s = "";
 					char ch = 0;
-					int o = (byteLoc % 4) * 8;
+					int o = 24 - ((byteLoc % 4) * 8);
 					do {
-						if (o == 32) {
-							eff_addr++;
-							val = mem [eff_addr];
-							o = 0;
-						}
 						ch = (char)((val >>> o) & 0xff) ;
 						s += ch;
-						o += 8;
+						if (o == 0) {
+							eff_addr++;
+							val = mem [eff_addr];
+							o = 24;
+						}
+						else {
+							o -= 8;
+						}
 					} while (ch != 0);
 					System.out.println(s);
 					break;
@@ -510,7 +512,7 @@ public class IsaSim {
 				}
 				// Exits with error in a1
 				case 17: {
-					System.out.println("Return Code: " + reg[11]);
+					System.out.println("Exit with error code: " + reg[11]);
 					break loop;
 				}
 				default: {
@@ -546,7 +548,7 @@ public class IsaSim {
 			System.out.print(reg[i] + " ");
 		}
 		System.out.println();
-		System.out.println("Program exit");
+		System.out.println("Shutdown");
 		writeOutput(reg, testFlag);
 	}
 	public static void writeOutput(int[] reg, String testFlag) {
@@ -601,8 +603,8 @@ public class IsaSim {
 			int[] instArr = new int[536870911];
 			progSize =  (int) (fileSize/4);
 			//loop through byte array and construct 32bit instructions
-			for (int i = 0 ; i < fileSize; i+=4) {
-				instArr[i/4] = byteBuffer.getInt();			
+			for (int i = 0 ; i < progSize; i++) {
+				instArr[i] = byteBuffer.getInt();			
 			}
 			return instArr;
 

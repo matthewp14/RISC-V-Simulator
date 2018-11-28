@@ -3,4 +3,6 @@
 .classpath
 *.DS_Store
 .gitignore.swp
-
+/test_files/demo/*.res
+/test_files/demo/*.s
+/src/tests/DemoTests.java
