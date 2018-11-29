@@ -14,7 +14,7 @@ import simulator.IsaSim;
 
 // Requires some visual inspection for full correctness checking
 
-class ECall {
+class VisuallyInspect {
 
 	static String testPath = "test_files/student/";
 	static Path outputFile = Paths.get("./output.res");
@@ -22,6 +22,16 @@ class ECall {
 	@Test
 	void ecall() throws IOException {
 		String testName = "ecall";
+		String path = testPath + testName + ".bin";
+		String[] arguments = new String[]{path, "test"};
+		IsaSim.main(arguments);
+		Path trueResults = Paths.get(testPath + testName + ".res");
+		assertTrue(Arrays.equals(Files.readAllBytes(trueResults), Files.readAllBytes(outputFile)));
+	}
+	
+	@Test
+	void invalid() throws IOException {
+		String testName = "invalid";
 		String path = testPath + testName + ".bin";
 		String[] arguments = new String[]{path, "test"};
 		IsaSim.main(arguments);

@@ -241,7 +241,7 @@ public class IsaSim {
 					}
 					reg[rd] = Integer.reverseBytes(reg[rd]);
 					reg[rd] >>>= 16;
-
+					break;
 				}
 				default: {
 					System.out.println("Trying to perform an unimplemented Load");
@@ -387,7 +387,6 @@ public class IsaSim {
 						break;
 					}
 					default: {
-						System.out.println("Unsupported I-Type (funct3)");
 						break;
 					}
 					}
