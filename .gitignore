@@ -6,3 +6,4 @@
 /test_files/demo/*.res
 /test_files/demo/*.s
 /src/tests/DemoTests.java
+output.res

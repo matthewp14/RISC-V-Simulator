@@ -1,13 +1,4 @@
 package simulator;
-/**
- * RISC-V Instruction Set Simulator
- * 
- * A tiny first step to get the simulator started. Can execute just a single
- * RISC-V instruction.
- * 
- * @author Martin Schoeberl (martin@jopdesign.com)
- *
- */
 import java.io.*;
 import java.nio.ByteBuffer;
 public class IsaSim {
@@ -16,7 +7,6 @@ public class IsaSim {
 	
 	public static void main(String[] args) {
 		
-//		int mem[] = new int[536870911];
 		int reg[] = new int[32];
 		
 		int pc = 0;
@@ -25,7 +15,6 @@ public class IsaSim {
 
 		reg[0] = 0; //hard code to 0
 		
-//		int prog[] = readByteFile(args[0]); //array of instructions
 		int mem[] = readByteFile(args[0]); //array of instructions
 		System.out.println("Startup");
 
@@ -47,7 +36,6 @@ public class IsaSim {
 		loop: while(true) {		
 			// Little to Big Endian
 			
-//			instr = Integer.reverseBytes(prog[pc]);
 			instr = Integer.reverseBytes(mem[pc]);
 			opcode = instr & 0b1111111;
 			switch (opcode) {
@@ -534,7 +522,6 @@ public class IsaSim {
 				pc += imm/4;
 				branch = !branch;
 			}
-//			if (pc >= prog.length) {
 			if (pc >= progSize) {
 				break loop;
 			}
@@ -597,9 +584,8 @@ public class IsaSim {
 			ByteBuffer byteBuffer = ByteBuffer.wrap(fileBytes);
 			inputStream.read(fileBytes); // Read the byte file into the byte array
 			
-//			int[] instArr = new int[ (int) (fileSize/4)]; // integer array of instructions
 	
-			int[] instArr = new int[536870911];
+			int[] instArr = new int[536870912];
 			progSize =  (int) (fileSize/4);
 			//loop through byte array and construct 32bit instructions
 			for (int i = 0 ; i < progSize; i++) {
